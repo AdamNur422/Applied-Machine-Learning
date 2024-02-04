@@ -22,7 +22,7 @@
 #    Ubuntu is specified by the tag after the colon ':' of the docker image! 
 #    See Ubuntu's Dockerhub page to see which image tag corresponds to version 
 #    18.04 using the following link: https://hub.docker.com/_/ubuntu/?tab=tags&page=1&ordering=last_updated.
-
+FROM ubuntu:18.04
 
 ################# TODO 2 #################
 # It's time to specify who is maintaining our Dockerfile. This acts as 
@@ -30,7 +30,7 @@
 #
 # 1. Given the LABEL command set the value of the "maintainer" key equal to 
 #    your first and last name. For example, "maintainer"="John Doe".
-
+LABEL maintainer="Adam Nur"
 
 ##################################
 # Now, let's set some arguments that will be used throughout the Dockerfile.
@@ -58,7 +58,7 @@ ARG HOST_GID="100"
 #
 # 1. Create an argument using the ARG instruction called HOST_USER which is set
 #    to your first name and last name. For example, HOST_USER="john Doe".
-
+ARG HOST_USER=Adam
 
 ##################################
 # Here we specify some environment variables which WILL be available to our container after
@@ -126,7 +126,8 @@ RUN groupadd -r ${HOST_USER} \
 # References:
 #   - Geeksforgeeks Docker COPY command usage: https://www.geeksforgeeks.org/docker-copy-instruction/
 #   - Offical Docker COPY Docs: https://docs.docker.com/engine/reference/builder/#copy
-
+COPY ./pip_requirements.txt $HOME/
+COPY ./conda_requirements.txt $HOME/
 
 ##################################
 # It's time to install some basic packages and software to help fleshout
@@ -172,7 +173,7 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
 # References:
 #   - Docker USER official docs https://docs.docker.com/engine/reference/builder/#user
 #   - Geeksforgeeks USER instruction https://www.geeksforgeeks.org/docker-user-instruction/
-
+USER $HOST_USER
 
 ################# TODO 6 #################
 # Further, we need to set our working directory. To do so we need to use the 
@@ -186,7 +187,7 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
 #
 # References:
 #   - Docker WORKDIR official docs https://docs.docker.com/engine/reference/builder/#workdir
-
+WORKDIR $HOME
 
 ##################################
 # Now that we have switched to our create user and set our working directory
@@ -224,10 +225,10 @@ RUN /bin/bash ./miniconda.sh -bp $CONDA_DIR \
 RUN  conda config --system --prepend channels conda-forge \
     && conda config --system --prepend channels anaconda \
     ##### TODO 7-1 #####
-    &&  \
+    && conda install --yes --file $HOME/conda_requirements.txt \
     && conda clean --all -f -y \
     ##### TODO 7-2 #####
-    && 
+    && rm conda_requirements.txt
 
 ################# TODO 8 #################
 # Next up we need to install any of our pip requirements in the 
@@ -245,9 +246,9 @@ RUN  conda config --system --prepend channels conda-forge \
 #    of the chain of commands for RUN!
 RUN pip install --upgrade pip \
     ##### TODO 8-1 #####
-    && \
+    && pip install --user -r pip_requirements.txt --no-cache-dir \
     ##### TODO 8-2 #####
-    && 
+    && rm pip_requirements.txt
 
 ##################################
 # This line is simply for aesthetic purposes. When we attach to our docker container 
@@ -269,7 +270,7 @@ RUN echo 'export PS1="\[\033[1;36m\]\u@\[\033[1;32m\]\h:\[\033[1;34m\]\w\[\033[0
 # References:
 #   - Run bash to create a interactive terminal for a container: https://tinyurl.com/45u3y9ru
 #    
-
+CMD /bin/bash
 
 ################# TODO 10 #################
 # Now it is time to build our Docker image and run it! If you need a remind be sure to review
@@ -311,3 +312,4 @@ RUN echo 'export PS1="\[\033[1;36m\]\u@\[\033[1;32m\]\h:\[\033[1;34m\]\w\[\033[0
 ################# SUBMIT #################
 # Once you have built your image and pushed it to Docker Hub submit this 
 # Dockerfile AND a link to your Docker Hub image that you just pushed!
+# https://hub.docker.com/layers/adamn422/docker-lab-5156/latest/images/sha256-deea80d1b4e1026282f51ce8c34b6e633b7ed77f86aeb8c7774faee60c9bad77?tab=layers
